@@ -1,0 +1,23 @@
+package com.sohan.user_service.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.util.List;
+
+@Entity
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class RoleEntity {
+
+    @Id
+    String name;
+    String description;
+
+    @ManyToMany
+    List<Permission> permissions;
+}

@@ -1,0 +1,2 @@
+package com.sohan.user_service.mapper;public interface PermissionMapper {
+}
