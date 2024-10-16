@@ -1,0 +1,6 @@
+package com.sohan.user_service.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PermissionEntity extends JpaRepository<PermissionEntity, String> {
+}
