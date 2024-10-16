@@ -34,7 +34,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(requests -> requests
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/users/my-info").hasRole("USER")
-                    .requestMatchers("/users/**").hasAuthority("READ_USER_PRIVILEGES")
+                    .requestMatchers("/users/**").permitAll()
                 .anyRequest().permitAll()
             )
             .exceptionHandling(exceptionHandling ->

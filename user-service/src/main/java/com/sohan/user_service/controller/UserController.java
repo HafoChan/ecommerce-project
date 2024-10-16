@@ -65,7 +65,7 @@ public class UserController {
     }
 
     @GetMapping
-    ApiResponse<List<UserResponse>> getAllUsers(@RequestParam(defaultValue = "0") Integer pageNumber, @RequestParam(defaultValue = "10") Integer size, @RequestParam(defaultValue = "username") String sortBy) {
+    ApiResponse<List<UserResponse>> getAllUsers(@RequestParam(defaultValue = "1") Integer pageNumber, @RequestParam(defaultValue = "10") Integer size, @RequestParam(defaultValue = "username") String sortBy) {
         try {
             List<UserResponse> response = userService.getAllUsers(pageNumber - 1, size, sortBy);
             return ApiResponse.<List<UserResponse>>builder()

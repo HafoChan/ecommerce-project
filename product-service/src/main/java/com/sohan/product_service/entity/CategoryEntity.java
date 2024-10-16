@@ -12,14 +12,15 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Table(name = "categories")
 public class CategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long categoryId;
     String categoryName;
+    String description;
 
-    @OneToMany
-    @JoinColumn(name = "categoryId", referencedColumnName = "categoryId")
+    @ManyToMany(mappedBy = "categories")
     List<ProductEntity> products;
 }
