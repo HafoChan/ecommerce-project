@@ -8,14 +8,19 @@ import com.sohan.user_service.service.IAuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationController {
+
     IAuthenticationService authenticationService;
 
     @PostMapping("/authenticate")
@@ -49,4 +54,23 @@ public class AuthenticationController {
                    .build();
         }
     }
+
+    @PostMapping("/validateToken")
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
+        try {
+            log.info("Token received: {}", token);
+            if (token.startsWith("Bearer "))
+                token = token.substring(7);
+
+            if (authenticationService.validateToken(token))
+                return ResponseEntity.ok().build();
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            log.error("Error validating token", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+
 }
