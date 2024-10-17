@@ -9,4 +9,6 @@ public interface IAuthenticationService {
     AuthenticationResponse authenticate(AuthenticationRequest request);
 
     RefreshTokenResponse refreshToken(String request);
+
+    boolean validateToken(String token);
 }

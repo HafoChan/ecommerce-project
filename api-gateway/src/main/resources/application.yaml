@@ -10,23 +10,17 @@ spring:
         - id: product-service
           uri: lb://product-service
           predicates:
-            - Path=/product-service/**
+            - Path=/api/product-service/**
           filters:
-            - StripPrefix=1
+            - StripPrefix=2
 
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/user-service/**
+            - Path=/api/user-service/**
           filters:
-            - StripPrefix=1
-
-        - id: common-service
-          uri: lb://common-service
-          predicates:
-            - Path=/common-service/**
-          filters:
-            - StripPrefix=1
+            - StripPrefix=2
+            #- RewritePath= /api/user-service/(?<segment>.*), /${segment}
 
     discovery:
       locator:

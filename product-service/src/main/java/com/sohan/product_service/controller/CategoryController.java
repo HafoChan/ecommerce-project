@@ -2,6 +2,7 @@ package com.sohan.product_service.controller;
 
 import com.sohan.product_service.dto.request.CategoryCreationAndUpdateRequest;
 import com.sohan.product_service.dto.response.CategoryResponse;
+import com.sohan.product_service.dto.response.ProductResponse;
 import com.sohan.product_service.service.ICategoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

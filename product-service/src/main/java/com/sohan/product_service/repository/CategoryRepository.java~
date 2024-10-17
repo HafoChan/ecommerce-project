@@ -1,2 +1,0 @@
-package com.sohan.product_service.repository;public interface CategoryRepository {
-}

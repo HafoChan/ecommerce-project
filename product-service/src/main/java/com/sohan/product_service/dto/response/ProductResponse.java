@@ -18,7 +18,6 @@ public class ProductResponse {
     double price;
     String description;
     int quantity;
-    List<CategoryResponse> categories;
     @Lob
     byte[] image;
 }

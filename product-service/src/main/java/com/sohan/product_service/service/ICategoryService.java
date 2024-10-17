@@ -2,6 +2,7 @@ package com.sohan.product_service.service;
 
 import com.sohan.product_service.dto.request.CategoryCreationAndUpdateRequest;
 import com.sohan.product_service.dto.response.CategoryResponse;
+import com.sohan.product_service.dto.response.ProductResponse;
 
 import java.util.List;
 
@@ -15,4 +16,5 @@ public interface ICategoryService {
     boolean delete(Long categoryId);
 
     CategoryResponse update(Long categoryId, CategoryCreationAndUpdateRequest request);
+
 }

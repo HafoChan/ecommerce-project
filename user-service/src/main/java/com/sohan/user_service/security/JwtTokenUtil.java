@@ -1,8 +1,12 @@
 package com.sohan.user_service.security;
 
+import com.sohan.user_service.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +19,12 @@ import static io.jsonwebtoken.security.Keys.secretKeyFor;
 
 @Component
 public class JwtTokenUtil {
+
+    private final UserRepository userRepository;
+
+    public JwtTokenUtil(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Value("${jwt.signerKey}")
     private String SIGNER_KEY;
@@ -43,6 +53,11 @@ public class JwtTokenUtil {
 
     public Boolean validateToken(String token, String username) {
         return username.equals(extractUsername(token)) && !isTokenExpired(token);
+    }
+
+    public Boolean validateTokenGateway(String token, String username) {
+        boolean checkName = userRepository.existsByUsername(username);
+        return checkName && !isTokenExpired(token);
     }
 
     public boolean isTokenExpired(String token) {

@@ -3,7 +3,9 @@ package com.sohan.product_service.service;
 import com.sohan.product_service.dto.request.CategoryCreationAndUpdateRequest;
 import com.sohan.product_service.dto.response.CategoryResponse;
 import com.sohan.product_service.entity.CategoryEntity;
+import com.sohan.product_service.entity.ProductEntity;
 import com.sohan.product_service.mapper.CategoryMapper;
+import com.sohan.product_service.mapper.ProductMapper;
 import com.sohan.product_service.repository.CategoryRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class CategoryService implements ICategoryService{
 
     CategoryRepository categoryRepository;
     CategoryMapper categoryMapper;
+    ProductMapper productMapper;
 
     @Override
     public List<CategoryResponse> getAll() {
@@ -29,6 +32,8 @@ public class CategoryService implements ICategoryService{
     @Override
     public CategoryResponse getById(Long categoryId) {
         CategoryEntity category = categoryRepository.findById(categoryId).orElseThrow(() -> new RuntimeException("Category not found"));
+        List<ProductEntity> listProducts = category.getProducts();
+        category.setProducts(listProducts);
         return categoryMapper.toCategoryResponse(category);
     }
 

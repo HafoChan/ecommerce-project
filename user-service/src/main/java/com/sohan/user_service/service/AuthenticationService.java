@@ -51,4 +51,10 @@ public class AuthenticationService implements IAuthenticationService{
                 .accessToken(accessToken)
                 .build();
     }
+
+    @Override
+    public boolean validateToken(String token) {
+        String username = jwtTokenUtil.extractUsername(token);
+        return jwtTokenUtil.validateTokenGateway(token, username);
+    }
 }
