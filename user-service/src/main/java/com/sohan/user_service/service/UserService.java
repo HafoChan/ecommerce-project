@@ -73,7 +73,7 @@ public class UserService implements IUserService {
     @Override
     public List<UserResponse> getAllUsers(Integer pageNumber, Integer size, String sortBy) {
 
-        Pageable pageable = PageRequest.of(pageNumber, size, Sort.by(sortBy));
+        Pageable pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, sortBy));
 
         Page<UserEntity> pageResult = userRepository.findAll(pageable);
         if (pageResult.hasContent())
@@ -84,8 +84,8 @@ public class UserService implements IUserService {
     @Override
     @Transactional
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        UserEntity user = userRepository.findById(userId).get();
+//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         userMapper.updateUserEntity(user, request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));

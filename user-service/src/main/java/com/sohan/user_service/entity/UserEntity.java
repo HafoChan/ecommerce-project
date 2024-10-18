@@ -14,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "users")
-public class UserEntity {
+public class UserEntity extends BaseAuditEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
