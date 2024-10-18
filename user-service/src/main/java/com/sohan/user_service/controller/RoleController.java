@@ -7,9 +7,11 @@ import com.sohan.user_service.service.IRoleService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/roles")
@@ -18,12 +20,12 @@ import java.util.List;
 public class RoleController {
 
     IRoleService roleService;
+    MessageSource messageSource;
 
     @PostMapping
     public ApiResponse<RoleResponse> createRole(@RequestBody RoleRequest request) {
         return ApiResponse.<RoleResponse>builder()
                 .success(true)
-                .message("Role created successfully")
                 .result(roleService.create(request))
                 .build();
     }
@@ -32,24 +34,26 @@ public class RoleController {
     public ApiResponse<List<RoleResponse>> getAllRoles() {
         return ApiResponse.<List<RoleResponse>>builder()
                 .success(true)
-                .message("Roles retrieved successfully")
                 .result(roleService.getAll())
                 .build();
     }
 
+    @GetMapping("/{name}")
+    public ApiResponse<RoleResponse> getRole(@PathVariable String name) {
+        return ApiResponse.<RoleResponse>builder()
+                .success(true)
+                .result(roleService.getById(name))
+                .build();
+    }
+
     @DeleteMapping("/{role}")
-    public ApiResponse<Boolean> deleteRole(@PathVariable String role) {
-        try {
-            roleService.delete(role);
-            return ApiResponse.<Boolean>builder()
-                    .success(true)
-                    .message("Permissions deleted successfully")
-                    .build();
-        } catch (Exception e) {
-            return ApiResponse.<Boolean>builder()
-                    .success(false)
-                    .message("Error deleting permission: " + e.getMessage())
-                    .build();
-        }
+    public ApiResponse<Boolean> deleteRole(@PathVariable String role, Locale locale) {
+        boolean checkDelete = roleService.delete(role);
+        String messageKey = checkDelete ? "role.delete.success" : "role.delete.notExist";
+        String message = messageSource.getMessage(messageKey, null, locale);
+        return ApiResponse.<Boolean>builder()
+                .success(checkDelete)
+                .message(message)
+                .build();
     }
 }

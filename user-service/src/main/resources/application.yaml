@@ -1,6 +1,9 @@
 spring:
   application:
     name: user-service
+  messages:
+    basename: messages
+    encoding: UTF-8
   datasource:
     url: jdbc:mysql://localhost:3306/ecommerce_user_service_db
     username: root
@@ -17,7 +20,6 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:1509/eureka/
-
 
 jwt:
   signerKey: "85WGJ8i3gqZVpHwYhflI4CN/uHe/ys3mHD3MuLuq0UuatYs5NBRm6wYwC1Rm9Ae8ST4OhqVgj0H2e8gOV7SiqP/ZPXHhnkMYmpznAm4sm4M="

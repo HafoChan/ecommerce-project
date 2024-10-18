@@ -7,9 +7,11 @@ import com.sohan.user_service.service.IPermissionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/permissions")
@@ -18,12 +20,12 @@ import java.util.List;
 public class PermissionController {
 
     IPermissionService permissionService;
+    MessageSource messageSource;
 
     @PostMapping
     public ApiResponse<PermissionResponse> createPermission(@RequestBody PermissionRequest request) {
         return ApiResponse.<PermissionResponse>builder()
                 .success(true)
-                .message("Permission created successfully")
                 .result(permissionService.create(request))
                 .build();
     }
@@ -32,24 +34,26 @@ public class PermissionController {
     public ApiResponse<List<PermissionResponse>> getAllPermissions() {
         return ApiResponse.<List<PermissionResponse>>builder()
                 .success(true)
-                .message("Permissions retrieved successfully")
                 .result(permissionService.getAll())
                 .build();
     }
 
+    @GetMapping("/{name}")
+    public ApiResponse<PermissionResponse> getPermission(@PathVariable String name) {
+        return ApiResponse.<PermissionResponse>builder()
+                .success(true)
+                .result(permissionService.getById(name))
+                .build();
+    }
+
     @DeleteMapping("/{permission}")
-    public ApiResponse<Boolean> deletePermission(@PathVariable String permission) {
-        try {
-            permissionService.delete(permission);
-            return ApiResponse.<Boolean>builder()
-                    .success(true)
-                    .message("Permissions deleted successfully")
-                    .build();
-        } catch (Exception e) {
-            return ApiResponse.<Boolean>builder()
-                    .success(false)
-                    .message("Error deleting permission: " + e.getMessage())
-                    .build();
-        }
+    public ApiResponse<Boolean> deletePermission(@PathVariable String permission, Locale locale) {
+        boolean checkDelete = permissionService.delete(permission);
+        String messageKey = checkDelete ? "permission.delete.success" : "permission.delete.notExist";
+        String message = messageSource.getMessage(messageKey, null, locale);
+        return ApiResponse.<Boolean>builder()
+                .success(checkDelete)
+                .message(message)
+                .build();
     }
 }

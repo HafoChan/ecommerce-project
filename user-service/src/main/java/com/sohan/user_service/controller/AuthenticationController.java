@@ -4,6 +4,7 @@ import com.sohan.user_service.dto.request.AuthenticationRequest;
 import com.sohan.user_service.dto.response.ApiResponse;
 import com.sohan.user_service.dto.response.AuthenticationResponse;
 import com.sohan.user_service.dto.response.RefreshTokenResponse;
+import com.sohan.user_service.exception.AppException;
 import com.sohan.user_service.service.IAuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,52 +26,26 @@ public class AuthenticationController {
 
     @PostMapping("/authenticate")
     public ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
-        try {
-            return ApiResponse.<AuthenticationResponse>builder()
-                    .success(true)
-                    .message("User logged in successfully")
-                    .result(authenticationService.authenticate(request))
-                    .build();
-        } catch (Exception e) {
-            return ApiResponse.<AuthenticationResponse>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .build();
-        }
+        return ApiResponse.<AuthenticationResponse>builder()
+                .success(true)
+                .result(authenticationService.authenticate(request))
+                .build();
     }
 
     @PostMapping("refresh-token")
     public ApiResponse<RefreshTokenResponse> refreshToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String refreshToken) {
-        try {
-            return ApiResponse.<RefreshTokenResponse>builder()
-                   .success(true)
-                   .message("Token refreshed successfully")
-                   .result(authenticationService.refreshToken(refreshToken))
-                   .build();
-        } catch (Exception e) {
-            return ApiResponse.<RefreshTokenResponse>builder()
-                   .success(false)
-                   .message(e.getMessage())
-                   .build();
-        }
+        return ApiResponse.<RefreshTokenResponse>builder()
+               .success(true)
+               .result(authenticationService.refreshToken(refreshToken))
+               .build();
     }
 
     @PostMapping("/validateToken")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
-        try {
-            log.info("Token received: {}", token);
-            if (token.startsWith("Bearer "))
-                token = token.substring(7);
+        boolean isValid = authenticationService.validateToken(token);
 
-            if (authenticationService.validateToken(token))
-                return ResponseEntity.ok().build();
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (Exception e) {
-            log.error("Error validating token", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        if (isValid)
+            return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
-
-
 }

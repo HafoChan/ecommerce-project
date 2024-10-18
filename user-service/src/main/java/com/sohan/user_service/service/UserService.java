@@ -6,6 +6,8 @@ import com.sohan.user_service.dto.response.UserResponse;
 import com.sohan.user_service.entity.RoleEntity;
 import com.sohan.user_service.entity.UserEntity;
 import com.sohan.user_service.enums.Role;
+import com.sohan.user_service.exception.AppException;
+import com.sohan.user_service.exception.ErrorCode;
 import com.sohan.user_service.mapper.UserMapper;
 import com.sohan.user_service.repository.RoleRepository;
 import com.sohan.user_service.repository.UserRepository;
@@ -37,7 +39,13 @@ public class UserService implements IUserService {
     @Transactional
     public UserResponse register(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new AppException(ErrorCode.USERNAME_EXISTS);
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_EXISTS);
+        }
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new AppException(ErrorCode.PHONE_EXISTS);
         }
 
         UserEntity user = userMapper.toUserEntity(request);
@@ -45,7 +53,7 @@ public class UserService implements IUserService {
 
         HashSet<RoleEntity> roles = new HashSet<>();
         RoleEntity role = roleRepository.findById(Role.USER.name())
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXIST));
         roles.add(role);
         user.setRoles(roles);
         userRepository.save(user);
@@ -57,7 +65,7 @@ public class UserService implements IUserService {
     public UserResponse getUserByUsername(String username) {
         UserEntity user = userRepository.findByUsername(username);
         if (user == null) {
-            throw new RuntimeException("User not found");
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
         return userMapper.toUserResponse(user);
     }
@@ -68,22 +76,30 @@ public class UserService implements IUserService {
         Pageable pageable = PageRequest.of(pageNumber, size, Sort.by(sortBy));
 
         Page<UserEntity> pageResult = userRepository.findAll(pageable);
-        if (pageResult.hasContent()) {
+        if (pageResult.hasContent())
             return pageResult.getContent().stream().map(userMapper::toUserResponse).toList();
-        } else {
-            return List.of();
-        }
+        return List.of();
     }
 
     @Override
     @Transactional
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         userMapper.updateUserEntity(user, request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
 
         return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    public boolean deleteUser(String userId) {
+        if(userRepository.existsById(userId)) {
+            userRepository.deleteById(userId);
+            return true;
+        }
+        return false;
     }
 }

@@ -11,5 +11,7 @@ public interface IPermissionService {
 
     List<PermissionResponse> getAll();
 
-    void delete(String name);
+    boolean delete(String name);
+
+    PermissionResponse getById(String name);
 }
