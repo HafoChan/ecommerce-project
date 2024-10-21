@@ -14,4 +14,6 @@ public interface IUserService {
     List<UserResponse> getAllUsers(Integer pageNumber, Integer size, String sortBy);
 
     UserResponse updateUser(String userId, UserUpdateRequest request);
+
+    boolean deleteUser(String userId);
 }

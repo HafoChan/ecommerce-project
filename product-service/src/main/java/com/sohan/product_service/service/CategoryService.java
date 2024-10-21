@@ -31,7 +31,8 @@ public class CategoryService implements ICategoryService{
 
     @Override
     public CategoryResponse getById(Long categoryId) {
-        CategoryEntity category = categoryRepository.findById(categoryId).orElseThrow(() -> new RuntimeException("Category not found"));
+        CategoryEntity category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
         List<ProductEntity> listProducts = category.getProducts();
         category.setProducts(listProducts);
         return categoryMapper.toCategoryResponse(category);

@@ -20,7 +20,6 @@ spring:
             - Path=/api/user-service/**
           filters:
             - StripPrefix=2
-            #- RewritePath= /api/user-service/(?<segment>.*), /${segment}
 
     discovery:
       locator:

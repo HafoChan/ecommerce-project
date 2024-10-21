@@ -12,8 +12,16 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
+
+    @NotBlank(message = "FULL_NAME_NOT_BLANK")
+    @Size(min = 5, message = "FULL_NAME_SIZE")
     String fullName;
-    String username;
+
+    @NotBlank(message = "PASSWORD_NOT_BLANK")
+    @Size(min = 6, message = "PASSWORD_SIZE")
     String password;
+
+    @NotBlank(message = "PHONE_NUMBER_NOT_BLANK")
+    @Pattern(regexp = "^[0-9]{10}$", message = "PHONE_NUMBER_PATTERN")
     String phone;
 }

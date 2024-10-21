@@ -1,31 +1,92 @@
 package com.sohan.user_service.exception;
 
 import com.sohan.user_service.dto.response.ApiResponse;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.LocaleResolver;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Locale;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+    @Autowired
+    private MessageSource messageSource;
 
-        ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder()
+    private String getLocalizedMessage(String messageKey) {
+        Locale locale = LocaleContextHolder.getLocale();
+        System.out.println("----------------" + locale.getDisplayLanguage());
+        return messageSource.getMessage(messageKey, null, locale);
+    }
+
+    // Quét tất cả các exception chưa được xử lý
+    @ExceptionHandler(value = Exception.class)
+    ResponseEntity<ApiResponse> handlingAllException(Exception exception) {
+        ApiResponse apiResponse = ApiResponse.builder()
                 .success(false)
-                .message("Validation failed")
-                .result(errors)
+                .code(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
+                .message(getLocalizedMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessageKey()))
+                .build();
+        return ResponseEntity
+                .status(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode())
+                .body(apiResponse);
+    }
+
+    // Cấu hình App exception cho ứng dụng
+    @ExceptionHandler(value = AppException.class)
+    ResponseEntity<ApiResponse> handlingAppException(AppException exception) {
+        ApiResponse apiResponse = ApiResponse.builder()
+                .success(false)
+                .message(getLocalizedMessage(exception.getErrorCode().getMessageKey()))
+                .code(exception.getErrorCode().getCode())
                 .build();
 
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return ResponseEntity
+                .status(exception.getErrorCode().getStatusCode())
+                .body(apiResponse);
+    }
+
+    // Bắt sự kiện Unauthorized
+    @ExceptionHandler(value = AccessDeniedException.class)
+    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception) {
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+
+        return ResponseEntity
+                .status(errorCode.getStatusCode())
+                .body(
+                    ApiResponse.builder()
+                            .code(errorCode.getCode())
+                            .success(false)
+                            .message(getLocalizedMessage(errorCode.getMessageKey()))
+                .build()
+        );
+    }
+
+    // Bắt các Exception cấu hình bằng message trong validation
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException exception) {
+        String enumKey = exception.getFieldError().getDefaultMessage();
+        ErrorCode errorCode;
+
+        try {
+            errorCode = ErrorCode.valueOf(enumKey);
+        } catch (IllegalArgumentException e) {
+            errorCode = ErrorCode.INVALID_KEY;
+        }
+
+        ApiResponse apiResponse = ApiResponse.builder()
+                .code(errorCode.getCode())
+                .success(false)
+                .message(getLocalizedMessage(errorCode.getMessageKey()))
+                .build();
+        return  ResponseEntity
+                .status(errorCode.getStatusCode())
+                .body(apiResponse);
     }
 }
