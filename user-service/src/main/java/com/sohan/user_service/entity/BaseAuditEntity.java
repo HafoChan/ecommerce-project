@@ -27,11 +27,12 @@ public class BaseAuditEntity {
     @LastModifiedDate
     LocalDateTime lastModifiedDate;
 
-}
-
-/* @CreatedBy
+    @CreatedBy
     @Column(updatable = false)
     String createdBy;
 
     @LastModifiedBy
-    String lastModifiedBy; */
+    String lastModifiedBy;
+
+}
+

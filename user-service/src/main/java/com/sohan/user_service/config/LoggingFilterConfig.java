@@ -12,7 +12,7 @@ import java.time.Instant;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
-public class FilterConfig {
+public class LoggingFilterConfig {
 
     @Bean
     @Order(1)
