@@ -21,6 +21,7 @@ public class GlobalExceptionHandler {
 
     private String getLocalizedMessage(String messageKey) {
         Locale locale = LocaleContextHolder.getLocale();
+        System.out.println("----------------" + locale.getDisplayLanguage());
         return messageSource.getMessage(messageKey, null, locale);
     }
 
