@@ -6,14 +6,13 @@ import com.sohan.api_gateway.dto.response.ApiResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -34,8 +33,18 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     WebClient.Builder webClientBuilder;
     ObjectMapper objectMapper;
 
+    @Value("${app.api-prefix}")
+    @NonFinal
+    private String apiPrefix;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+
+        String requestPath = exchange.getRequest().getPath().toString();
+        HttpMethod requestMethod = exchange.getRequest().getMethod();
+
+        if (isPublicEndpoint(requestPath, requestMethod))
+            return chain.filter(exchange);
 
         // Get token from authorization header
         List<String> authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION);
@@ -43,18 +52,31 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         if (CollectionUtils.isEmpty(authHeader))
             return unauthenticated(exchange.getResponse());
 
-        String token = authHeader.getFirst().replace("Bearer ", "");
+        String token = authHeader.get(0).replace("Bearer ", "");
         log.info("Token: {}", token);
 
         // verify token
         return webClientBuilder.build()
                 .post()
-                .uri("http://localhost:8081/auth/validateToken")
+                .uri("http://localhost:8081/auth/validate-token")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .then(chain.filter(exchange))
                 .onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
+    }
+
+    private boolean isPublicEndpoint(String requestPath, HttpMethod method) {
+        if (requestPath.matches(apiPrefix + "/user-service/.*"))
+            return true;
+
+        if (requestPath.matches(apiPrefix + "/product-service/categories/.*") && method == HttpMethod.GET)
+            return true;
+
+        if (requestPath.matches(apiPrefix + "/product-service/products/.*") && method == HttpMethod.GET)
+            return true;
+
+        return false;
     }
 
     // Xem thêm về reactive và webflux
@@ -64,7 +86,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                 .message("Unauthenticated")
                 .build();
 
-        String body = null;
+        String body;
 
         try {
             body = objectMapper.writeValueAsString(apiResponse);

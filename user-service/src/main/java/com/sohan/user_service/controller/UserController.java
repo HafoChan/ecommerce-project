@@ -4,16 +4,13 @@ import com.sohan.user_service.dto.request.UserCreationRequest;
 import com.sohan.user_service.dto.request.UserUpdateRequest;
 import com.sohan.user_service.dto.response.ApiResponse;
 import com.sohan.user_service.dto.response.UserResponse;
-import com.sohan.user_service.exception.AppException;
-import com.sohan.user_service.exception.ErrorCode;
 import com.sohan.user_service.service.IUserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.MessageSource;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,18 +35,22 @@ public class UserController {
     }
 
     @GetMapping("/my-info")
-    ApiResponse<UserResponse> getUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            String username = authentication.getName();
+    ApiResponse<UserResponse> getMyInfo() {
+        System.out.println("Tới endpoint lấy info");
+        UserResponse response = userService.getMyInfo();
+        return ApiResponse.<UserResponse>builder()
+                .success(true)
+                .result(response)
+                .build();
+    }
 
-            UserResponse response = userService.getUserByUsername(username);
-            return ApiResponse.<UserResponse>builder()
-                    .success(true)
-                    .result(response)
-                    .build();
-        }
-        throw new AppException(ErrorCode.UNAUTHENTICATED);
+    @GetMapping("/{userId}")
+    ApiResponse<UserResponse> getUserById(@PathVariable("userId") String userId) {
+        UserResponse response = userService.getUserById(userId);
+        return ApiResponse.<UserResponse>builder()
+                .success(true)
+                .result(response)
+               .build();
     }
 
     @GetMapping
@@ -63,10 +64,8 @@ public class UserController {
                 .build();
     }
 
-
     @PutMapping("/{userId}")
     ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
-
         UserResponse response = userService.updateUser(userId, request);
         return ApiResponse.<UserResponse>builder()
                 .success(true)
@@ -76,12 +75,12 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     ApiResponse <String> deleteUser(@PathVariable String userId, Locale locale) {
-        boolean checkDelete = userService.deleteUser(userId);
-        String messageKey = checkDelete ? "user.delete.success" : "user.delete.notExist";
+        userService.deleteUser(userId);
+        String messageKey = "user.delete.success";
         String message = messageSource.getMessage(messageKey, null, locale);
 
         return ApiResponse.<String>builder()
-               .success(checkDelete)
+               .success(true)
                .message(message)
                .build();
     }

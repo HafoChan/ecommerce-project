@@ -12,9 +12,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+
+import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +33,7 @@ public class AuthenticationService implements IAuthenticationService{
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
             final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-            final String token = jwtTokenUtil.generateRefreshToken(userDetails.getUsername());
+            final String token = jwtTokenUtil.generateRefreshToken(userDetails.getUsername(), userDetails.getAuthorities());
             return AuthenticationResponse.builder()
                     .token(token)
                     .authenticated(true)
@@ -50,7 +53,10 @@ public class AuthenticationService implements IAuthenticationService{
         if (jwtTokenUtil.isTokenExpired(refreshToken))
             throw new AppException(ErrorCode.TOKEN_EXPIRED);
 
-        String accessToken = jwtTokenUtil.generateAccessToken(jwtTokenUtil.extractUsername(refreshToken));
+        String username = jwtTokenUtil.extractUsername(refreshToken);
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        String accessToken = jwtTokenUtil.generateAccessToken(username, userDetails.getAuthorities());
 
         return RefreshTokenResponse.builder()
                 .accessToken(accessToken)

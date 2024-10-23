@@ -40,12 +40,13 @@ public class AuthenticationController {
                .build();
     }
 
-    @PostMapping("/validateToken")
+    @PostMapping("/validate-token")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
         boolean isValid = authenticationService.validateToken(token);
 
         if (isValid)
             return ResponseEntity.ok().build();
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }
