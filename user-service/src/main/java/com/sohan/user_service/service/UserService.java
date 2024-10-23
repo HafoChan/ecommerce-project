@@ -18,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,12 +64,18 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse getUserByUsername(String username) {
-        UserEntity user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+    public UserResponse getMyInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Tới đây rồi nè ....................................");
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            UserEntity user = userRepository.findByUsername(username);
+            if (user == null) {
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+            return userMapper.toUserResponse(user);
         }
-        return userMapper.toUserResponse(user);
+        throw new AppException(ErrorCode.UNAUTHENTICATED);
     }
 
     @Override
@@ -84,8 +92,9 @@ public class UserService implements IUserService {
     @Override
     @Transactional
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
-        UserEntity user = userRepository.findById(userId).get();
-//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        checkAuthorizationUser(user.getUsername());
 
         userMapper.updateUserEntity(user, request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -95,11 +104,34 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public boolean deleteUser(String userId) {
-        if(userRepository.existsById(userId)) {
-            userRepository.deleteById(userId);
-            return true;
+    @Transactional
+    public void deleteUser(String userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        checkAuthorizationUser(user.getUsername());
+        userRepository.delete(user);
+    }
+
+    @Override
+    public UserResponse getUserById(String userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        return userMapper.toUserResponse(user);
+    }
+
+    private void checkAuthorizationUser(String username) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        return false;
+
+        String currentUsername = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !currentUsername.equals(username)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
     }
 }

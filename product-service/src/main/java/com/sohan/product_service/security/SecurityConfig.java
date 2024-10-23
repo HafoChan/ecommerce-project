@@ -1,4 +1,4 @@
-package com.sohan.user_service.security;
+package com.sohan.product_service.security;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -16,32 +16,34 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
 
-    JwtRequestFilter jwtRequestFilter;
     JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    UserDetailsService userDetailsService;
+    CustomJwtDecoder customJwtDecoder;
 
     @Bean
     protected SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(requests -> requests
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/users").permitAll()
-                .requestMatchers(HttpMethod.GET, "/users", "/users/{userId}").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/users/my-info").hasAnyRole("USER", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/users/{userId}").hasAnyRole("USER", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/users/{userId}").hasAnyRole("USER", "ADMIN")
-                .requestMatchers("/roles/**", "/permissions/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/categories").hasAuthority("WRITE_PRIVILEGES")
+                .requestMatchers(HttpMethod.PUT, "/categories/{categoryId}").hasAuthority("WRITE_PRIVILEGES")
+                .requestMatchers(HttpMethod.DELETE, "/categories/{categoryId}").hasAuthority("DELETE_PRIVILEGES")
+
+                .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/products").hasAuthority("WRITE_PRIVILEGES")
+                .requestMatchers(HttpMethod.PUT, "/products/{productId}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/products/{productId}").hasAuthority("DELETE_PRIVILEGES")
                 .requestMatchers(
                         "/v3/api-docs",
                         "/v3/api-docs/**",
@@ -52,27 +54,29 @@ public class SecurityConfig {
                         "/swagger-resources/**",
                         "/configuration/ui",
                         "/configuration/security"
-                        ).permitAll()
+                ).permitAll()
+            )
+            .oauth2ResourceServer(oauth2 ->
+                    oauth2.jwt(jwtConfigurer -> jwtConfigurer
+                .decoder(customJwtDecoder)
+                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
             )
             .exceptionHandling(exceptionHandling ->
                     exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint)
             )
-            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // The configuration doesn't use HTTP Session.
             .build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authManagerBuilder
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder());
-        return authManagerBuilder.build();
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("permissions");
+
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+
+        return jwtAuthenticationConverter;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }

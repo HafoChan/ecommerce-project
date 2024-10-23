@@ -4,6 +4,8 @@ import com.sohan.product_service.dto.request.CategoryCreationAndUpdateRequest;
 import com.sohan.product_service.dto.response.CategoryResponse;
 import com.sohan.product_service.entity.CategoryEntity;
 import com.sohan.product_service.entity.ProductEntity;
+import com.sohan.product_service.exception.AppException;
+import com.sohan.product_service.exception.ErrorCode;
 import com.sohan.product_service.mapper.CategoryMapper;
 import com.sohan.product_service.mapper.ProductMapper;
 import com.sohan.product_service.repository.CategoryRepository;
@@ -32,7 +34,7 @@ public class CategoryService implements ICategoryService{
     @Override
     public CategoryResponse getById(Long categoryId) {
         CategoryEntity category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         List<ProductEntity> listProducts = category.getProducts();
         category.setProducts(listProducts);
         return categoryMapper.toCategoryResponse(category);
@@ -56,7 +58,7 @@ public class CategoryService implements ICategoryService{
             categoryRepository.save(category);
             return categoryMapper.toCategoryResponse(category);
         }
-        throw new RuntimeException("Category not found");
+        throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
     }
 
     @Override

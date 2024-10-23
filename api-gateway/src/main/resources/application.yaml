@@ -1,6 +1,10 @@
 server:
   port: 8080
 
+app:
+  api-prefix: /api/v1
+
+
 spring:
   application:
     name: api-gateway
@@ -10,16 +14,16 @@ spring:
         - id: product-service
           uri: lb://product-service
           predicates:
-            - Path=/api/product-service/**
+            - Path=${app.api-prefix}/product-service/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=3
 
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/api/user-service/**
+            - Path=${app.api-prefix}/user-service/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=3
 
     discovery:
       locator:

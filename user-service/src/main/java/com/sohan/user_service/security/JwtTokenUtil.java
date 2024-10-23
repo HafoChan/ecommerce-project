@@ -4,16 +4,13 @@ import com.sohan.user_service.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.jsonwebtoken.security.Keys.secretKeyFor;
 
@@ -29,18 +26,23 @@ public class JwtTokenUtil {
     @Value("${jwt.signerKey}")
     private String SIGNER_KEY;
 
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String username, Collection<? extends GrantedAuthority> authorities) {
         Date expiration = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7);
-        return createToken(username, expiration);
+        return createToken(username, expiration, authorities);
     }
 
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String username, Collection<? extends GrantedAuthority> authorities) {
         Date expiration = new Date(System.currentTimeMillis() + 1000 * 60 * 30);
-        return createToken(username, expiration);
+        return createToken(username, expiration, authorities);
     }
 
-    private String createToken(String subject, Date expiration) {
+    private String createToken(String subject, Date expiration, Collection<? extends GrantedAuthority> authorities) {
+        List<String> permissions = authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
         Map<String, Object> claims = new HashMap<String, Object>();
+        claims.put("permissions", permissions);
         claims.put("domain", "sohan.com");
         return Jwts.builder()
                .setClaims(claims)

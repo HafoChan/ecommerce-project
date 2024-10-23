@@ -3,6 +3,8 @@ package com.sohan.product_service.service;
 import com.sohan.product_service.dto.response.ProductResponse;
 import com.sohan.product_service.entity.CategoryEntity;
 import com.sohan.product_service.entity.ProductEntity;
+import com.sohan.product_service.exception.AppException;
+import com.sohan.product_service.exception.ErrorCode;
 import com.sohan.product_service.mapper.CategoryMapper;
 import com.sohan.product_service.mapper.ProductMapper;
 import com.sohan.product_service.repository.CategoryRepository;
@@ -34,7 +36,7 @@ public class ProductService implements IProductService {
     @Override
     public ProductResponse getById(Long productId) {
         ProductEntity product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
         return productMapper.toProductResponse(product);
     }
@@ -93,7 +95,7 @@ public class ProductService implements IProductService {
 
             return productMapper.toProductResponse(product);
         }
-        throw new RuntimeException("Product not found");
+        throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
     @Override

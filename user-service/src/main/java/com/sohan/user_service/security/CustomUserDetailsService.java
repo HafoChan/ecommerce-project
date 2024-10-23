@@ -7,6 +7,7 @@ import com.sohan.user_service.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -41,6 +42,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             for (PermissionEntity permission : permissions) {
                 authorities.add(new SimpleGrantedAuthority(permission.getName()));
             }
+            System.out.println("................................");
         }
 
         return new User(

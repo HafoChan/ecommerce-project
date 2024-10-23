@@ -1,6 +1,6 @@
-package com.sohan.user_service.exception;
+package com.sohan.product_service.exception;
 
-import com.sohan.user_service.dto.response.ApiResponse;
+import com.sohan.product_service.dto.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -18,18 +18,13 @@ public class GlobalExceptionHandler {
     @Autowired
     private MessageSource messageSource;
 
-    private String getLocalizedMessage(String messageKey) {
-        Locale locale = LocaleContextHolder.getLocale();
-        return messageSource.getMessage(messageKey, null, locale);
-    }
-
     // Quét tất cả các exception chưa được xử lý
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse> handlingAllException(Exception exception) {
         ApiResponse apiResponse = ApiResponse.builder()
                 .success(false)
                 .code(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
-                .message(getLocalizedMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessageKey()))
+                .message(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage())
                 .build();
         return ResponseEntity
                 .status(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode())
@@ -41,7 +36,7 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiResponse> handlingAppException(AppException exception) {
         ApiResponse apiResponse = ApiResponse.builder()
                 .success(false)
-                .message(getLocalizedMessage(exception.getErrorCode().getMessageKey()))
+                .message(exception.getErrorCode().getMessage())
                 .code(exception.getErrorCode().getCode())
                 .build();
 
@@ -61,7 +56,7 @@ public class GlobalExceptionHandler {
                     ApiResponse.builder()
                             .code(errorCode.getCode())
                             .success(false)
-                            .message(getLocalizedMessage(errorCode.getMessageKey()))
+                            .message(errorCode.getMessage())
                 .build()
         );
     }
@@ -81,7 +76,7 @@ public class GlobalExceptionHandler {
         ApiResponse apiResponse = ApiResponse.builder()
                 .code(errorCode.getCode())
                 .success(false)
-                .message(getLocalizedMessage(errorCode.getMessageKey()))
+                .message(errorCode.getMessage())
                 .build();
         return  ResponseEntity
                 .status(errorCode.getStatusCode())

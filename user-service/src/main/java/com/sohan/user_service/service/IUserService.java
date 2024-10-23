@@ -9,11 +9,13 @@ import java.util.List;
 public interface IUserService {
     UserResponse register(UserCreationRequest request);
 
-    UserResponse getUserByUsername(String username);
+    UserResponse getMyInfo();
 
     List<UserResponse> getAllUsers(Integer pageNumber, Integer size, String sortBy);
 
     UserResponse updateUser(String userId, UserUpdateRequest request);
 
-    boolean deleteUser(String userId);
+    void deleteUser(String userId);
+
+    UserResponse getUserById(String userId);
 }
